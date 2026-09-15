@@ -1,0 +1,84 @@
+openapi: 3.1.0
+info:
+  title: Evidence packs schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    EvidencePackId:
+      type: string
+      pattern: '^evp_[0-9A-HJKMNP-TV-Z]{26}$'
+    EvidencePackStatus:
+      type: string
+      enum: [draft, complete, exported]
+    EvidenceArtefact:
+      type: object
+      required: [kind, present]
+      properties:
+        kind:
+          type: string
+          enum: [lineage, approvals, metrics, incidents]
+        present:
+          type: boolean
+        uri:
+          type: string
+    EvidencePack:
+      type: object
+      required: [evidencePackId, modelId, status, artefacts, createdAt, updatedAt]
+      properties:
+        evidencePackId:
+          $ref: '#/components/schemas/EvidencePackId'
+        modelId:
+          type: string
+        status:
+          $ref: '#/components/schemas/EvidencePackStatus'
+        artefacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceArtefact'
+        hash:
+          type: string
+        downloadUrl:
+          type: string
+          format: uri
+        shareExpiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    EvidencePackCreateRequest:
+      type: object
+      required: [modelId]
+      properties:
+        modelId:
+          type: string
+    EvidencePackResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/EvidencePack'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    EvidencePackListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencePack'
+        nextCursor:
+          type: string
+    EvidencePackListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/EvidencePackListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

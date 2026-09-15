@@ -1,0 +1,251 @@
+openapi: 3.1.0
+info:
+  title: Datasets API
+  version: 0.1.0
+  description: |
+    Dataset lineage and purpose-bound expiring access grants (BR-2).
+  license:
+    name: Proprietary
+  x-domain: dst
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Datasets
+    description: Lineage and grants
+paths:
+  /v1/datasets:
+    get:
+      operationId: listDatasets
+      tags: [Datasets]
+      summary: List dataset lineage records
+      x-repository: Dataset
+      x-dynamodb:
+        entityType: "DATASET"
+        pkPatternTemplate: "DATASET#${datasetId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: projectId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datasets
+          content:
+            application/json:
+              schema:
+                $ref: ./datasets.schemas.yaml#/components/schemas/DatasetLineageListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: registerDataset
+      tags: [Datasets]
+      summary: Register dataset lineage
+      x-repository: Dataset
+      x-dynamodb:
+        entityType: "DATASET"
+        pkPatternTemplate: "DATASET#${datasetId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./datasets.schemas.yaml#/components/schemas/DatasetLineageCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./datasets.schemas.yaml#/components/schemas/DatasetLineageResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/datasets/{datasetId}:
+    get:
+      operationId: getDataset
+      tags: [Datasets]
+      summary: Get dataset lineage
+      x-repository: Dataset
+      x-dynamodb:
+        entityType: "DATASET"
+        pkPatternTemplate: "DATASET#${datasetId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: ./datasets.schemas.yaml#/components/schemas/DatasetId
+      responses:
+        '200':
+          description: Dataset
+          content:
+            application/json:
+              schema:
+                $ref: ./datasets.schemas.yaml#/components/schemas/DatasetLineageResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/datasets/{datasetId}/grants:
+    get:
+      operationId: listDatasetGrants
+      tags: [Datasets]
+      summary: List purpose-bound grants
+      x-repository: DatasetGrant
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: ./datasets.schemas.yaml#/components/schemas/DatasetId
+      responses:
+        '200':
+          description: Grants
+          content:
+            application/json:
+              schema:
+                $ref: ./datasets.schemas.yaml#/components/schemas/DatasetAccessGrantListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createDatasetGrant
+      tags: [Datasets]
+      summary: Grant expiring purpose-bound access
+      x-repository: DatasetGrant
+      x-dynamodb:
+        entityType: "DATASET_GRANT"
+        pkPatternTemplate: "DATASET#${datasetId}"
+        skPatternTemplate: "GRANT#${grantId}"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: ./datasets.schemas.yaml#/components/schemas/DatasetId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./datasets.schemas.yaml#/components/schemas/DatasetAccessGrantCreateRequest
+      responses:
+        '201':
+          description: Grant created
+          content:
+            application/json:
+              schema:
+                $ref: ./datasets.schemas.yaml#/components/schemas/DatasetAccessGrantResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/datasets/{datasetId}/grants/{grantId}:
+    delete:
+      operationId: revokeDatasetGrant
+      tags: [Datasets]
+      summary: Revoke a grant
+      x-repository: DatasetGrant
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: ./datasets.schemas.yaml#/components/schemas/DatasetId
+        - name: grantId
+          in: path
+          required: true
+          schema:
+            $ref: ./datasets.schemas.yaml#/components/schemas/GrantId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '204':
+          description: Revoked
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/datasets/{datasetId}/attest:
+    post:
+      operationId: attestDatasetPurpose
+      tags: [Datasets]
+      summary: Attest permitted purpose
+      x-repository: Dataset
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            $ref: ./datasets.schemas.yaml#/components/schemas/DatasetId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./datasets.schemas.yaml#/components/schemas/DatasetPurposeAttestRequest
+      responses:
+        '200':
+          description: Attested
+          content:
+            application/json:
+              schema:
+                $ref: ./datasets.schemas.yaml#/components/schemas/DatasetLineageResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

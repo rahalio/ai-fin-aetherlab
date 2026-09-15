@@ -1,0 +1,873 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const createTrainingJob_Body = z
+  .object({
+    modelId: z.string(),
+    datasetId: z.string(),
+    computeProfile: z.string().optional(),
+    team: z.string().optional(),
+    baseWeight: z
+      .object({
+        modelZooId: z.string(),
+        licence: z.string(),
+        riskNotes: z.string(),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const registerTrainingJobBaseWeight_Body = z
+  .object({
+    modelZooId: z.string(),
+    licence: z.string(),
+    riskNotes: z.string().optional(),
+  })
+  .passthrough();
+const TrainingJobStatus = z.enum([
+  'queued',
+  'running',
+  'succeeded',
+  'failed',
+  'stopped',
+]);
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const TrainingJobId = z.string();
+const BaseWeightNote = z
+  .object({
+    modelZooId: z.string(),
+    licence: z.string(),
+    riskNotes: z.string(),
+  })
+  .partial()
+  .passthrough();
+const TrainingJob = z
+  .object({
+    trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+    modelId: z.string(),
+    datasetId: z.string().optional(),
+    projectId: z.string().optional(),
+    status: z.enum(['queued', 'running', 'succeeded', 'failed', 'stopped']),
+    computeProfile: z.string().optional(),
+    costUsd: z.number().optional(),
+    team: z.string().optional(),
+    zombie: z.boolean().optional(),
+    baseWeight: z
+      .object({
+        modelZooId: z.string(),
+        licence: z.string(),
+        riskNotes: z.string(),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+    stoppedAt: z.string().datetime({ offset: true }).optional(),
+  })
+  .passthrough();
+const TrainingJobListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+          modelId: z.string(),
+          datasetId: z.string().optional(),
+          projectId: z.string().optional(),
+          status: z.enum([
+            'queued',
+            'running',
+            'succeeded',
+            'failed',
+            'stopped',
+          ]),
+          computeProfile: z.string().optional(),
+          costUsd: z.number().optional(),
+          team: z.string().optional(),
+          zombie: z.boolean().optional(),
+          baseWeight: z
+            .object({
+              modelZooId: z.string(),
+              licence: z.string(),
+              riskNotes: z.string(),
+            })
+            .partial()
+            .passthrough()
+            .optional(),
+          createdAt: z.string().datetime({ offset: true }),
+          updatedAt: z.string().datetime({ offset: true }),
+          stoppedAt: z.string().datetime({ offset: true }).optional(),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const TrainingJobListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+              modelId: z.string(),
+              datasetId: z.string().optional(),
+              projectId: z.string().optional(),
+              status: z.enum([
+                'queued',
+                'running',
+                'succeeded',
+                'failed',
+                'stopped',
+              ]),
+              computeProfile: z.string().optional(),
+              costUsd: z.number().optional(),
+              team: z.string().optional(),
+              zombie: z.boolean().optional(),
+              baseWeight: z
+                .object({
+                  modelZooId: z.string(),
+                  licence: z.string(),
+                  riskNotes: z.string(),
+                })
+                .partial()
+                .passthrough()
+                .optional(),
+              createdAt: z.string().datetime({ offset: true }),
+              updatedAt: z.string().datetime({ offset: true }),
+              stoppedAt: z.string().datetime({ offset: true }).optional(),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const TrainingJobCreateRequest = z
+  .object({
+    modelId: z.string(),
+    datasetId: z.string(),
+    computeProfile: z.string().optional(),
+    team: z.string().optional(),
+    baseWeight: z
+      .object({
+        modelZooId: z.string(),
+        licence: z.string(),
+        riskNotes: z.string(),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const TrainingJobResponse = z
+  .object({
+    data: z
+      .object({
+        trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+        modelId: z.string(),
+        datasetId: z.string().optional(),
+        projectId: z.string().optional(),
+        status: z.enum(['queued', 'running', 'succeeded', 'failed', 'stopped']),
+        computeProfile: z.string().optional(),
+        costUsd: z.number().optional(),
+        team: z.string().optional(),
+        zombie: z.boolean().optional(),
+        baseWeight: z
+          .object({
+            modelZooId: z.string(),
+            licence: z.string(),
+            riskNotes: z.string(),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+        createdAt: z.string().datetime({ offset: true }),
+        updatedAt: z.string().datetime({ offset: true }),
+        stoppedAt: z.string().datetime({ offset: true }).optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const RegisterBaseWeightRequest = z
+  .object({
+    modelZooId: z.string(),
+    licence: z.string(),
+    riskNotes: z.string().optional(),
+  })
+  .passthrough();
+const SpendRow = z
+  .object({
+    modelId: z.string(),
+    team: z.string(),
+    costUsd: z.number(),
+    zombieJobCount: z.number().int().optional(),
+    budgetCapUsd: z.number().optional(),
+  })
+  .passthrough();
+const SpendReport = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          modelId: z.string(),
+          team: z.string(),
+          costUsd: z.number(),
+          zombieJobCount: z.number().int().optional(),
+          budgetCapUsd: z.number().optional(),
+        })
+        .passthrough()
+    ),
+    costApiLag: z.boolean().optional(),
+  })
+  .passthrough();
+const SpendReportResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              modelId: z.string(),
+              team: z.string(),
+              costUsd: z.number(),
+              zombieJobCount: z.number().int().optional(),
+              budgetCapUsd: z.number().optional(),
+            })
+            .passthrough()
+        ),
+        costApiLag: z.boolean().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export const schemas: any = {
+  createTrainingJob_Body,
+  registerTrainingJobBaseWeight_Body,
+  TrainingJobStatus,
+  Problem,
+  TrainingJobId,
+  BaseWeightNote,
+  TrainingJob,
+  TrainingJobListData,
+  ResponseMeta,
+  TrainingJobListResponse,
+  TrainingJobCreateRequest,
+  TrainingJobResponse,
+  RegisterBaseWeightRequest,
+  SpendRow,
+  SpendReport,
+  SpendReportResponse,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v1/spend',
+    alias: 'listCloudSpend',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(200).optional().default(50),
+      },
+      {
+        name: 'team',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  modelId: z.string(),
+                  team: z.string(),
+                  costUsd: z.number(),
+                  zombieJobCount: z.number().int().optional(),
+                  budgetCapUsd: z.number().optional(),
+                })
+                .passthrough()
+            ),
+            costApiLag: z.boolean().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/training-jobs',
+    alias: 'listTrainingJobs',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(200).optional().default(50),
+      },
+      {
+        name: 'modelId',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z
+          .enum(['queued', 'running', 'succeeded', 'failed', 'stopped'])
+          .optional(),
+      },
+      {
+        name: 'zombie',
+        type: 'Query',
+        schema: z.boolean().optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  trainingJobId: z
+                    .string()
+                    .regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  modelId: z.string(),
+                  datasetId: z.string().optional(),
+                  projectId: z.string().optional(),
+                  status: z.enum([
+                    'queued',
+                    'running',
+                    'succeeded',
+                    'failed',
+                    'stopped',
+                  ]),
+                  computeProfile: z.string().optional(),
+                  costUsd: z.number().optional(),
+                  team: z.string().optional(),
+                  zombie: z.boolean().optional(),
+                  baseWeight: z
+                    .object({
+                      modelZooId: z.string(),
+                      licence: z.string(),
+                      riskNotes: z.string(),
+                    })
+                    .partial()
+                    .passthrough()
+                    .optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                  updatedAt: z.string().datetime({ offset: true }),
+                  stoppedAt: z.string().datetime({ offset: true }).optional(),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/training-jobs',
+    alias: 'createTrainingJob',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: createTrainingJob_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelId: z.string(),
+            datasetId: z.string().optional(),
+            projectId: z.string().optional(),
+            status: z.enum([
+              'queued',
+              'running',
+              'succeeded',
+              'failed',
+              'stopped',
+            ]),
+            computeProfile: z.string().optional(),
+            costUsd: z.number().optional(),
+            team: z.string().optional(),
+            zombie: z.boolean().optional(),
+            baseWeight: z
+              .object({
+                modelZooId: z.string(),
+                licence: z.string(),
+                riskNotes: z.string(),
+              })
+              .partial()
+              .passthrough()
+              .optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            stoppedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/training-jobs/:trainingJobId',
+    alias: 'getTrainingJob',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'trainingJobId',
+        type: 'Path',
+        schema: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelId: z.string(),
+            datasetId: z.string().optional(),
+            projectId: z.string().optional(),
+            status: z.enum([
+              'queued',
+              'running',
+              'succeeded',
+              'failed',
+              'stopped',
+            ]),
+            computeProfile: z.string().optional(),
+            costUsd: z.number().optional(),
+            team: z.string().optional(),
+            zombie: z.boolean().optional(),
+            baseWeight: z
+              .object({
+                modelZooId: z.string(),
+                licence: z.string(),
+                riskNotes: z.string(),
+              })
+              .partial()
+              .passthrough()
+              .optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            stoppedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/training-jobs/:trainingJobId/base-weight',
+    alias: 'registerTrainingJobBaseWeight',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: registerTrainingJobBaseWeight_Body,
+      },
+      {
+        name: 'trainingJobId',
+        type: 'Path',
+        schema: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelId: z.string(),
+            datasetId: z.string().optional(),
+            projectId: z.string().optional(),
+            status: z.enum([
+              'queued',
+              'running',
+              'succeeded',
+              'failed',
+              'stopped',
+            ]),
+            computeProfile: z.string().optional(),
+            costUsd: z.number().optional(),
+            team: z.string().optional(),
+            zombie: z.boolean().optional(),
+            baseWeight: z
+              .object({
+                modelZooId: z.string(),
+                licence: z.string(),
+                riskNotes: z.string(),
+              })
+              .partial()
+              .passthrough()
+              .optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            stoppedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/training-jobs/:trainingJobId/stop',
+    alias: 'stopTrainingJob',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'trainingJobId',
+        type: 'Path',
+        schema: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            trainingJobId: z.string().regex(/^trn_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelId: z.string(),
+            datasetId: z.string().optional(),
+            projectId: z.string().optional(),
+            status: z.enum([
+              'queued',
+              'running',
+              'succeeded',
+              'failed',
+              'stopped',
+            ]),
+            computeProfile: z.string().optional(),
+            costUsd: z.number().optional(),
+            team: z.string().optional(),
+            zombie: z.boolean().optional(),
+            baseWeight: z
+              .object({
+                modelZooId: z.string(),
+                licence: z.string(),
+                riskNotes: z.string(),
+              })
+              .partial()
+              .passthrough()
+              .optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            stoppedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios(
+  'https://api.ddd-codegen-starter.local/v1',
+  endpoints
+);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

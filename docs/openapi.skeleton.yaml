@@ -1,0 +1,944 @@
+openapi: 3.0.3
+info:
+  title: Aetherlab
+  version: 0.1.0
+  description: Regulated cloud AI factory control plane for bank model inventory, training, deploy, and
+    monitors.
+  x-product-slug: ai-fin-aetherlab
+  x-source: ai-in-financial@aetherlab/ai-in-financefinal-aws-80316055745@aetherlab/
+servers:
+- url: https:@aetherlab/@aetherlab/api.example.com
+tags:
+- name: Projects
+  description: AI projects
+- name: Models
+  description: Model inventory
+- name: Datasets
+  description: Dataset lineage
+- name: TrainingJobs
+  description: Training jobs
+- name: Evaluations
+  description: Business-goal evaluations
+- name: Deployments
+  description: Deployment approvals
+- name: Monitors
+  description: Production monitors
+- name: EvidencePacks
+  description: Examiner evidence packs
+paths:
+  @aetherlab/v1@aetherlab/projects:
+    get:
+      operationId: listProjects
+      tags:
+      - Projects
+      security: &id001
+      - BearerAuth: []
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeProject'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: createProject
+      tags:
+      - Projects
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ProjectCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeProject'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/models:
+    get:
+      operationId: listModels
+      tags:
+      - Models
+      security: *id001
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeModel'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: createModel
+      tags:
+      - Models
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ModelCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeModel'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/models@aetherlab/{modelId}:
+    parameters:
+    - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/ModelId'
+    get:
+      operationId: getModel
+      tags:
+      - Models
+      security: *id001
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeModel'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '404':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/NotFound'
+  @aetherlab/v1@aetherlab/datasets:
+    get:
+      operationId: listDatasets
+      tags:
+      - Datasets
+      security: *id001
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeDatasetLineage'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: registerDataset
+      tags:
+      - Datasets
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DatasetLineageCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeDatasetLineage'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/training-jobs:
+    get:
+      operationId: listTrainingJobs
+      tags:
+      - TrainingJobs
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeTrainingJob'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: createTrainingJob
+      tags:
+      - TrainingJobs
+      security:
+      - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/TrainingJobCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeTrainingJob'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/evaluations:
+    get:
+      operationId: listEvaluations
+      tags:
+      - Evaluations
+      security: *id001
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeEvaluationReport'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: createEvaluation
+      tags:
+      - Evaluations
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/EvaluationReportCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeEvaluationReport'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/deployments:
+    get:
+      operationId: listDeployments
+      tags:
+      - Deployments
+      security: *id001
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeDeploymentApproval'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: requestDeployment
+      tags:
+      - Deployments
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DeploymentApprovalCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeDeploymentApproval'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/monitors:
+    get:
+      operationId: listMonitors
+      tags:
+      - Monitors
+      security: *id001
+      parameters:
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Cursor'
+      - $ref: '#@aetherlab/components@aetherlab/parameters@aetherlab/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ListEnvelopeMonitor'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+    post:
+      operationId: createMonitor
+      tags:
+      - Monitors
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/MonitorCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeMonitor'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+        '422':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/UnprocessableEntity'
+  @aetherlab/v1@aetherlab/evidence-packs:
+    post:
+      operationId: createModelEvidencePack
+      tags:
+      - EvidencePacks
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application@aetherlab/json:
+            schema:
+              type: object
+              required:
+              - modelId
+              properties:
+                modelId:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application@aetherlab/json:
+              schema:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DataEnvelopeEvidencePack'
+        '401':
+          $ref: '#@aetherlab/components@aetherlab/responses@aetherlab/Unauthorized'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    ModelId:
+      name: modelId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application@aetherlab/json:
+          schema:
+            $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Problem'
+    NotFound:
+      description: Not found
+      content:
+        application@aetherlab/json:
+          schema:
+            $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Problem'
+    UnprocessableEntity:
+      description: Unprocessable entity
+      content:
+        application@aetherlab/json:
+          schema:
+            $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Problem'
+  schemas:
+    ResponseMeta:
+      type: object
+      required:
+      - requestId
+      - timestamp
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+    Project:
+      type: object
+      required:
+      - id
+      - name
+      - owner
+      - riskClass
+      - status
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        owner:
+          type: string
+        riskClass:
+          type: string
+          enum:
+          - low
+          - credit
+          - aml
+          - trading
+          - adverse_action
+        status:
+          type: string
+          enum:
+          - active
+          - archived
+    ProjectCreate:
+      type: object
+      required:
+      - name
+      - owner
+      - riskClass
+      - problemStatement
+      properties:
+        name:
+          type: string
+        owner:
+          type: string
+        riskClass:
+          type: string
+          enum:
+          - low
+          - credit
+          - aml
+          - trading
+          - adverse_action
+        problemStatement:
+          type: string
+    Model:
+      type: object
+      required:
+      - id
+      - projectId
+      - name
+      - status
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+          - draft
+          - trained
+          - approved
+          - deployed
+          - retired
+    ModelCreate:
+      type: object
+      required:
+      - projectId
+      - name
+      properties:
+        projectId:
+          type: string
+        name:
+          type: string
+        baseModelZooId:
+          type: string
+    DatasetLineage:
+      type: object
+      required:
+      - id
+      - projectId
+      - sourceSystem
+      - purpose
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        sourceSystem:
+          type: string
+        extractedAt:
+          type: string
+          format: date-time
+        purpose:
+          type: string
+        locationUri:
+          type: string
+    DatasetLineageCreate:
+      type: object
+      required:
+      - projectId
+      - sourceSystem
+      - purpose
+      - locationUri
+      properties:
+        projectId:
+          type: string
+        sourceSystem:
+          type: string
+        extractedAt:
+          type: string
+          format: date-time
+        purpose:
+          type: string
+        locationUri:
+          type: string
+    TrainingJob:
+      type: object
+      required:
+      - id
+      - modelId
+      - status
+      properties:
+        id:
+          type: string
+        modelId:
+          type: string
+        datasetId:
+          type: string
+        status:
+          type: string
+          enum:
+          - queued
+          - running
+          - succeeded
+          - failed
+        costUsd:
+          type: number
+    TrainingJobCreate:
+      type: object
+      required:
+      - modelId
+      - datasetId
+      properties:
+        modelId:
+          type: string
+        datasetId:
+          type: string
+        computeProfile:
+          type: string
+    EvaluationReport:
+      type: object
+      required:
+      - id
+      - modelId
+      - businessGoalMet
+      properties:
+        id:
+          type: string
+        modelId:
+          type: string
+        businessGoalMet:
+          type: boolean
+        metrics:
+          type: object
+          additionalProperties:
+            type: number
+        notes:
+          type: string
+    EvaluationReportCreate:
+      type: object
+      required:
+      - modelId
+      - businessGoalMet
+      - metrics
+      properties:
+        modelId:
+          type: string
+        businessGoalMet:
+          type: boolean
+        metrics:
+          type: object
+          additionalProperties:
+            type: number
+        notes:
+          type: string
+    DeploymentApproval:
+      type: object
+      required:
+      - id
+      - modelId
+      - status
+      properties:
+        id:
+          type: string
+        modelId:
+          type: string
+        endpointName:
+          type: string
+        status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - rejected
+        validatorId:
+          type: string
+    DeploymentApprovalCreate:
+      type: object
+      required:
+      - modelId
+      - endpointName
+      - monitorIds
+      properties:
+        modelId:
+          type: string
+        endpointName:
+          type: string
+        monitorIds:
+          type: array
+          items:
+            type: string
+    Monitor:
+      type: object
+      required:
+      - id
+      - modelId
+      - metric
+      - status
+      properties:
+        id:
+          type: string
+        modelId:
+          type: string
+        metric:
+          type: string
+        threshold:
+          type: number
+        status:
+          type: string
+          enum:
+          - healthy
+          - breached
+          - disabled
+    MonitorCreate:
+      type: object
+      required:
+      - modelId
+      - metric
+      - threshold
+      properties:
+        modelId:
+          type: string
+        metric:
+          type: string
+        threshold:
+          type: number
+    EvidencePack:
+      type: object
+      required:
+      - id
+      - modelId
+      properties:
+        id:
+          type: string
+        modelId:
+          type: string
+        downloadUrl:
+          type: string
+          format: uri
+    DataEnvelopeProject:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Project'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeProject:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Project'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeModel:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Model'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeModel:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Model'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeDatasetLineage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DatasetLineage'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeDatasetLineage:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DatasetLineage'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeTrainingJob:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/TrainingJob'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeTrainingJob:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/TrainingJob'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeEvaluationReport:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/EvaluationReport'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeEvaluationReport:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/EvaluationReport'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeDeploymentApproval:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DeploymentApproval'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeDeploymentApproval:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/DeploymentApproval'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeMonitor:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Monitor'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeMonitor:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/Monitor'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    DataEnvelopeEvidencePack:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/EvidencePack'
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'
+    ListEnvelopeEvidencePack:
+      type: object
+      required:
+      - data
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/EvidencePack'
+            nextCursor:
+              type: string
+        meta:
+          $ref: '#@aetherlab/components@aetherlab/schemas@aetherlab/ResponseMeta'

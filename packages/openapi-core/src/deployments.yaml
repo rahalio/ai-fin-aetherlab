@@ -1,0 +1,258 @@
+openapi: 3.1.0
+info:
+  title: Deployments API
+  version: 0.1.0
+  description: |
+    Dual-control deploy approvals, monitor-required gates, retire and rollback (BR-4, BR-5, BR-7).
+  license:
+    name: Proprietary
+  x-domain: dep
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Deployments
+    description: Dual-control deployments
+paths:
+  /v1/deployments:
+    get:
+      operationId: listDeployments
+      tags: [Deployments]
+      summary: List deployment approvals
+      x-repository: Deployment
+      x-dynamodb:
+        entityType: "DEPLOYMENT"
+        pkPatternTemplate: "DEPLOYMENT#${deploymentId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentStatus
+        - name: modelId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deployments
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: requestDeployment
+      tags: [Deployments]
+      summary: Request production deploy (422 if monitors missing or builder=validator)
+      x-repository: Deployment
+      x-dynamodb:
+        entityType: "DEPLOYMENT"
+        pkPatternTemplate: "DEPLOYMENT#${deploymentId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/deployments/{deploymentId}:
+    get:
+      operationId: getDeployment
+      tags: [Deployments]
+      summary: Get a deployment approval
+      x-repository: Deployment
+      x-dynamodb:
+        entityType: "DEPLOYMENT"
+        pkPatternTemplate: "DEPLOYMENT#${deploymentId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          schema:
+            $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentId
+      responses:
+        '200':
+          description: Deployment
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/deployments/{deploymentId}/decision:
+    post:
+      operationId: decideDeployment
+      tags: [Deployments]
+      summary: Validator sign or reject (must differ from builder)
+      x-repository: Deployment
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          schema:
+            $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentDecisionRequest
+      responses:
+        '200':
+          description: Decision
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/deployments/{deploymentId}/deploy:
+    post:
+      operationId: executeDeployment
+      tags: [Deployments]
+      summary: Record production deploy after dual control
+      x-repository: Deployment
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          schema:
+            $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Deployed
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/deployments/{deploymentId}/retire:
+    post:
+      operationId: retireDeployment
+      tags: [Deployments]
+      summary: Retire an endpoint (blocked if dependents remain)
+      x-repository: Deployment
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          schema:
+            $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Retired
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/deployments/{deploymentId}/rollback:
+    post:
+      operationId: rollbackDeployment
+      tags: [Deployments]
+      summary: Rollback to a prior approved version
+      x-repository: Deployment
+      parameters:
+        - name: deploymentId
+          in: path
+          required: true
+          schema:
+            $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./deployments.schemas.yaml#/components/schemas/RollbackRequest
+      responses:
+        '200':
+          description: Rolled back
+          content:
+            application/json:
+              schema:
+                $ref: ./deployments.schemas.yaml#/components/schemas/DeploymentApprovalResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

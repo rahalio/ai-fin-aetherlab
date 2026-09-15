@@ -1,0 +1,33 @@
+{
+  "name": "aetherlab",
+  "version": "0.1.0",
+  "description": "Aetherlab \u2014 regulated cloud AI factory control plane",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:openapi": "pnpm --filter @aetherlab/openapi-core lint:domains",
+    "bundle:openapi": "pnpm --filter @aetherlab/openapi-core bundle:domains",
+    "build": "pnpm --filter @aetherlab/core build && pnpm --filter @aetherlab/services build && pnpm --filter @aetherlab/adapters build && pnpm --filter @aetherlab/api-server build",
+    "dev:api": "pnpm --filter @aetherlab/api-server dev",
+    "dev:web": "pnpm --filter @aetherlab/webapp dev",
+    "codegen:core": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src python3 -m zero_codegen.cli.main generate --all --layers core --config .codegen/.zero-codegen-merged.json --skip-build",
+    "codegen:identity": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src python3 -m zero_codegen.cli.main generate --domain identity --config .codegen/.zero-codegen-merged.json --skip-build",
+    "codegen:paths": "node scripts/sync-codegen-paths.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "core-js"]
+  }
+}

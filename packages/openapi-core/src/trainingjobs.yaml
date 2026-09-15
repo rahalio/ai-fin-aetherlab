@@ -1,0 +1,220 @@
+openapi: 3.1.0
+info:
+  title: Training jobs API
+  version: 0.1.0
+  description: |
+    Training job orchestration records, zombie kill, model-zoo notes, and cloud spend (BR-6, BR-9).
+  license:
+    name: Proprietary
+  x-domain: trn
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: TrainingJobs
+    description: Training jobs and spend
+paths:
+  /v1/training-jobs:
+    get:
+      operationId: listTrainingJobs
+      tags: [TrainingJobs]
+      summary: List training jobs
+      x-repository: TrainingJob
+      x-dynamodb:
+        entityType: "TRAINING_JOB"
+        pkPatternTemplate: "TRAININGJOB#${trainingJobId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: modelId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobStatus
+        - name: zombie
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Jobs
+          content:
+            application/json:
+              schema:
+                $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createTrainingJob
+      tags: [TrainingJobs]
+      summary: Record a training job launch (blocked without frame/lineage)
+      x-repository: TrainingJob
+      x-dynamodb:
+        entityType: "TRAINING_JOB"
+        pkPatternTemplate: "TRAININGJOB#${trainingJobId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      security:
+        - apiKey: []
+        - bearerAuth: []
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/training-jobs/{trainingJobId}:
+    get:
+      operationId: getTrainingJob
+      tags: [TrainingJobs]
+      summary: Get a training job
+      x-repository: TrainingJob
+      x-dynamodb:
+        entityType: "TRAINING_JOB"
+        pkPatternTemplate: "TRAININGJOB#${trainingJobId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: trainingJobId
+          in: path
+          required: true
+          schema:
+            $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobId
+      responses:
+        '200':
+          description: Job
+          content:
+            application/json:
+              schema:
+                $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/training-jobs/{trainingJobId}/stop:
+    post:
+      operationId: stopTrainingJob
+      tags: [TrainingJobs]
+      summary: Stop a zombie or running training job
+      x-repository: TrainingJob
+      parameters:
+        - name: trainingJobId
+          in: path
+          required: true
+          schema:
+            $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Stopped
+          content:
+            application/json:
+              schema:
+                $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/training-jobs/{trainingJobId}/base-weight:
+    post:
+      operationId: registerTrainingJobBaseWeight
+      tags: [TrainingJobs]
+      summary: Register transfer-learning / model-zoo licence and risk notes
+      x-repository: TrainingJob
+      parameters:
+        - name: trainingJobId
+          in: path
+          required: true
+          schema:
+            $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./trainingjobs.schemas.yaml#/components/schemas/RegisterBaseWeightRequest
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: ./trainingjobs.schemas.yaml#/components/schemas/TrainingJobResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/spend:
+    get:
+      operationId: listCloudSpend
+      tags: [TrainingJobs]
+      summary: Cloud/GPU spend by model and team
+      x-repository: TrainingJob
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: team
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Spend rollup
+          content:
+            application/json:
+              schema:
+                $ref: ./trainingjobs.schemas.yaml#/components/schemas/SpendReportResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

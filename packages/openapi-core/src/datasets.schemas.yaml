@@ -1,0 +1,156 @@
+openapi: 3.1.0
+info:
+  title: Datasets schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    DatasetId:
+      type: string
+      pattern: '^dst_[0-9A-HJKMNP-TV-Z]{26}$'
+    GrantId:
+      type: string
+      pattern: '^grn_[0-9A-HJKMNP-TV-Z]{26}$'
+    DatasetLineage:
+      type: object
+      required:
+        - datasetId
+        - projectId
+        - sourceSystem
+        - purpose
+        - locationUri
+        - createdAt
+        - updatedAt
+      properties:
+        datasetId:
+          $ref: '#/components/schemas/DatasetId'
+        projectId:
+          type: string
+        sourceSystem:
+          type: string
+        extractedAt:
+          type: string
+          format: date-time
+        purpose:
+          type: string
+        locationUri:
+          type: string
+        residency:
+          type: string
+        qualityNotes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DatasetLineageCreateRequest:
+      type: object
+      required: [projectId, sourceSystem, purpose, locationUri]
+      properties:
+        projectId:
+          type: string
+        sourceSystem:
+          type: string
+        extractedAt:
+          type: string
+          format: date-time
+        purpose:
+          type: string
+        locationUri:
+          type: string
+        residency:
+          type: string
+        qualityNotes:
+          type: string
+    DatasetAccessGrant:
+      type: object
+      required: [grantId, datasetId, grantee, purpose, expiresAt, status]
+      properties:
+        grantId:
+          $ref: '#/components/schemas/GrantId'
+        datasetId:
+          $ref: '#/components/schemas/DatasetId'
+        grantee:
+          type: string
+        purpose:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, expired, revoked]
+        attestedAt:
+          type: string
+          format: date-time
+    DatasetAccessGrantCreateRequest:
+      type: object
+      required: [grantee, purpose, expiresAt]
+      properties:
+        grantee:
+          type: string
+        purpose:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    DatasetPurposeAttestRequest:
+      type: object
+      required: [purpose]
+      properties:
+        purpose:
+          type: string
+        notes:
+          type: string
+    DatasetLineageResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DatasetLineage'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    DatasetLineageListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetLineage'
+        nextCursor:
+          type: string
+    DatasetLineageListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DatasetLineageListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    DatasetAccessGrantResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DatasetAccessGrant'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    DatasetAccessGrantListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetAccessGrant'
+    DatasetAccessGrantListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DatasetAccessGrantListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

@@ -1,0 +1,94 @@
+openapi: 3.1.0
+info:
+  title: Monitors schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    MonitorId:
+      type: string
+      pattern: '^mon_[0-9A-HJKMNP-TV-Z]{26}$'
+    MonitorStatus:
+      type: string
+      enum: [healthy, breached, disabled]
+    MonitorMetric:
+      type: string
+      enum: [drift, performance, latency, cost, business_kpi]
+    Monitor:
+      type: object
+      required: [monitorId, modelId, metric, threshold, status, createdAt, updatedAt]
+      properties:
+        monitorId:
+          $ref: '#/components/schemas/MonitorId'
+        modelId:
+          type: string
+        endpointName:
+          type: string
+        metric:
+          $ref: '#/components/schemas/MonitorMetric'
+        threshold:
+          type: number
+        status:
+          $ref: '#/components/schemas/MonitorStatus'
+        alertRouting:
+          type: string
+        retrainTrigger:
+          type: boolean
+        lastAcknowledgedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    MonitorCreateRequest:
+      type: object
+      required: [modelId, metric, threshold]
+      properties:
+        modelId:
+          type: string
+        endpointName:
+          type: string
+        metric:
+          $ref: '#/components/schemas/MonitorMetric'
+        threshold:
+          type: number
+        alertRouting:
+          type: string
+        retrainTrigger:
+          type: boolean
+    AcknowledgeMonitorRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+        openRetrain:
+          type: boolean
+    MonitorResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Monitor'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    MonitorListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Monitor'
+        nextCursor:
+          type: string
+    MonitorListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/MonitorListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

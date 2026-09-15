@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: Monitors API
+  version: 0.1.0
+  description: |
+    Production monitors for drift, performance, latency, cost, and business KPI (BR-5).
+  license:
+    name: Proprietary
+  x-domain: mon
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Monitors
+    description: Production monitors
+paths:
+  /v1/monitors:
+    get:
+      operationId: listMonitors
+      tags: [Monitors]
+      summary: List monitors
+      x-repository: Monitor
+      x-dynamodb:
+        entityType: "MONITOR"
+        pkPatternTemplate: "MONITOR#${monitorId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: modelId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: ./monitors.schemas.yaml#/components/schemas/MonitorStatus
+      responses:
+        '200':
+          description: Monitors
+          content:
+            application/json:
+              schema:
+                $ref: ./monitors.schemas.yaml#/components/schemas/MonitorListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createMonitor
+      tags: [Monitors]
+      summary: Attach a production monitor
+      x-repository: Monitor
+      x-dynamodb:
+        entityType: "MONITOR"
+        pkPatternTemplate: "MONITOR#${monitorId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./monitors.schemas.yaml#/components/schemas/MonitorCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./monitors.schemas.yaml#/components/schemas/MonitorResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/monitors/{monitorId}:
+    get:
+      operationId: getMonitor
+      tags: [Monitors]
+      summary: Get a monitor
+      x-repository: Monitor
+      x-dynamodb:
+        entityType: "MONITOR"
+        pkPatternTemplate: "MONITOR#${monitorId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: monitorId
+          in: path
+          required: true
+          schema:
+            $ref: ./monitors.schemas.yaml#/components/schemas/MonitorId
+      responses:
+        '200':
+          description: Monitor
+          content:
+            application/json:
+              schema:
+                $ref: ./monitors.schemas.yaml#/components/schemas/MonitorResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/monitors/{monitorId}/acknowledge:
+    post:
+      operationId: acknowledgeMonitor
+      tags: [Monitors]
+      summary: Acknowledge drift/breach and optionally open retrain
+      x-repository: Monitor
+      parameters:
+        - name: monitorId
+          in: path
+          required: true
+          schema:
+            $ref: ./monitors.schemas.yaml#/components/schemas/MonitorId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./monitors.schemas.yaml#/components/schemas/AcknowledgeMonitorRequest
+      responses:
+        '200':
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: ./monitors.schemas.yaml#/components/schemas/MonitorResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

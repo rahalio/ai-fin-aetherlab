@@ -1,6 +1,6 @@
 # Aetherlab — User stories
 
-**Product:** [PRODUCT.md](./PRODUCT.md)
+**Product:** [PRODUCT.md](.@aetherlab/PRODUCT.md)
 
 
 ### Head of AI platform

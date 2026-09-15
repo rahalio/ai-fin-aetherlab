@@ -1,0 +1,252 @@
+openapi: 3.1.0
+info:
+  title: Projects API
+  version: 0.1.0
+  description: |
+    AI factory projects, problem frames, scale quota, and risk-class gates (BR-1, BR-10).
+  license:
+    name: Proprietary
+  x-domain: prj
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Projects
+    description: Projects, framing, and risk-class gates
+paths:
+  /v1/projects:
+    get:
+      operationId: listProjects
+      tags: [Projects]
+      summary: List factory projects
+      x-repository: Project
+      x-dynamodb:
+        entityType: "PROJECT"
+        pkPatternTemplate: "PROJECT#${projectId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: riskClass
+          in: query
+          schema:
+            $ref: ./projects.schemas.yaml#/components/schemas/RiskClass
+        - name: status
+          in: query
+          schema:
+            $ref: ./projects.schemas.yaml#/components/schemas/ProjectStatus
+      responses:
+        '200':
+          description: Project list
+          content:
+            application/json:
+              schema:
+                $ref: ./projects.schemas.yaml#/components/schemas/ProjectListResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createProject
+      tags: [Projects]
+      summary: Register a project
+      x-repository: Project
+      x-dynamodb:
+        entityType: "PROJECT"
+        pkPatternTemplate: "PROJECT#${projectId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./projects.schemas.yaml#/components/schemas/ProjectCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./projects.schemas.yaml#/components/schemas/ProjectResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/projects/{projectId}:
+    get:
+      operationId: getProject
+      tags: [Projects]
+      summary: Get a project
+      x-repository: Project
+      x-dynamodb:
+        entityType: "PROJECT"
+        pkPatternTemplate: "PROJECT#${projectId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: ./projects.schemas.yaml#/components/schemas/ProjectId
+      responses:
+        '200':
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: ./projects.schemas.yaml#/components/schemas/ProjectResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/projects/{projectId}/frame:
+    post:
+      operationId: submitProjectProblemFrame
+      tags: [Projects]
+      summary: Submit problem framing and business KPI (required before scale train)
+      x-repository: Project
+      x-dynamodb:
+        entityType: "PROJECT"
+        pkPatternTemplate: "PROJECT#${projectId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: ./projects.schemas.yaml#/components/schemas/ProjectId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./projects.schemas.yaml#/components/schemas/SubmitProblemFrameRequest
+      responses:
+        '200':
+          description: Frame recorded
+          content:
+            application/json:
+              schema:
+                $ref: ./projects.schemas.yaml#/components/schemas/ProjectResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/projects/{projectId}/scale-quota:
+    post:
+      operationId: decideProjectScaleQuota
+      tags: [Projects]
+      summary: Grant or deny GPU scale quota after framing
+      x-repository: Project
+      x-dynamodb:
+        entityType: "PROJECT"
+        pkPatternTemplate: "PROJECT#${projectId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: ./projects.schemas.yaml#/components/schemas/ProjectId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./projects.schemas.yaml#/components/schemas/ScaleQuotaDecisionRequest
+      responses:
+        '200':
+          description: Quota decision
+          content:
+            application/json:
+              schema:
+                $ref: ./projects.schemas.yaml#/components/schemas/ProjectResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/risk-class-gates:
+    get:
+      operationId: getRiskClassGateMatrix
+      tags: [Projects]
+      summary: Risk-class gate matrix (credit/AML/trading stricter than low)
+      x-repository: Project
+      responses:
+        '200':
+          description: Gate matrix
+          content:
+            application/json:
+              schema:
+                $ref: ./projects.schemas.yaml#/components/schemas/RiskClassGateMatrixResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

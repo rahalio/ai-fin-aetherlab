@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  title: Training jobs schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    TrainingJobId:
+      type: string
+      pattern: '^trn_[0-9A-HJKMNP-TV-Z]{26}$'
+    TrainingJobStatus:
+      type: string
+      enum: [queued, running, succeeded, failed, stopped]
+    BaseWeightNote:
+      type: object
+      properties:
+        modelZooId:
+          type: string
+        licence:
+          type: string
+        riskNotes:
+          type: string
+    TrainingJob:
+      type: object
+      required: [trainingJobId, modelId, status, createdAt, updatedAt]
+      properties:
+        trainingJobId:
+          $ref: '#/components/schemas/TrainingJobId'
+        modelId:
+          type: string
+        datasetId:
+          type: string
+        projectId:
+          type: string
+        status:
+          $ref: '#/components/schemas/TrainingJobStatus'
+        computeProfile:
+          type: string
+        costUsd:
+          type: number
+        team:
+          type: string
+        zombie:
+          type: boolean
+        baseWeight:
+          $ref: '#/components/schemas/BaseWeightNote'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        stoppedAt:
+          type: string
+          format: date-time
+    TrainingJobCreateRequest:
+      type: object
+      required: [modelId, datasetId]
+      properties:
+        modelId:
+          type: string
+        datasetId:
+          type: string
+        computeProfile:
+          type: string
+        team:
+          type: string
+        baseWeight:
+          $ref: '#/components/schemas/BaseWeightNote'
+    RegisterBaseWeightRequest:
+      type: object
+      required: [modelZooId, licence]
+      properties:
+        modelZooId:
+          type: string
+        licence:
+          type: string
+        riskNotes:
+          type: string
+    SpendRow:
+      type: object
+      required: [modelId, team, costUsd]
+      properties:
+        modelId:
+          type: string
+        team:
+          type: string
+        costUsd:
+          type: number
+        zombieJobCount:
+          type: integer
+        budgetCapUsd:
+          type: number
+    SpendReport:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpendRow'
+        costApiLag:
+          type: boolean
+    TrainingJobResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TrainingJob'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    TrainingJobListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingJob'
+        nextCursor:
+          type: string
+    TrainingJobListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TrainingJobListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    SpendReportResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SpendReport'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

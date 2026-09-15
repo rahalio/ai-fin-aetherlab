@@ -1,0 +1,109 @@
+openapi: 3.1.0
+info:
+  title: Evaluations schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    EvaluationId:
+      type: string
+      pattern: '^evl_[0-9A-HJKMNP-TV-Z]{26}$'
+    EvaluationVerdict:
+      type: string
+      enum: [pending, passed, failed]
+    EvaluationReport:
+      type: object
+      required:
+        - evaluationId
+        - modelId
+        - declaredKpi
+        - businessGoalMet
+        - verdict
+        - createdAt
+        - updatedAt
+      properties:
+        evaluationId:
+          $ref: '#/components/schemas/EvaluationId'
+        modelId:
+          type: string
+        declaredKpi:
+          type: string
+        observedKpiValue:
+          type: number
+        businessGoalMet:
+          type: boolean
+        techMetrics:
+          type: object
+          additionalProperties:
+            type: number
+        notes:
+          type: string
+        artefactUri:
+          type: string
+        verdict:
+          $ref: '#/components/schemas/EvaluationVerdict'
+        validatorId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    EvaluationReportCreateRequest:
+      type: object
+      required: [modelId, declaredKpi, businessGoalMet, techMetrics]
+      properties:
+        modelId:
+          type: string
+        declaredKpi:
+          type: string
+        observedKpiValue:
+          type: number
+        businessGoalMet:
+          type: boolean
+        techMetrics:
+          type: object
+          additionalProperties:
+            type: number
+        notes:
+          type: string
+        artefactUri:
+          type: string
+    EvaluationDecisionRequest:
+      type: object
+      required: [verdict]
+      properties:
+        verdict:
+          type: string
+          enum: [passed, failed]
+        notes:
+          type: string
+        requestRetrain:
+          type: boolean
+    EvaluationReportResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/EvaluationReport'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    EvaluationReportListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationReport'
+        nextCursor:
+          type: string
+    EvaluationReportListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/EvaluationReportListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

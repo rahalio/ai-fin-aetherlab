@@ -1,0 +1,17 @@
+---
+description: OpenAPI-first DDD codegen — core-only after YAML edits; full scaffold for new domains
+globs:
+  - packages/openapi-core/**/*
+  - packages/core/**/*
+  - platform/**/*
+  - .codegen/**/*
+alwaysApply: false
+---
+
+# DDD codegen (this repo)
+
+- **New domain:** full multi-layer generate once, then hand-fit platform.
+- **Existing domain YAML edit:** bundle → regenerate **`packages/core` only** → handwrite services/adapters/api-server.
+- Package scope: `@aetherlab/*`. Config: `.codegen/.zero-codegen-merged.json` (run `pnpm codegen:paths`). Never commit `.codegen/`.
+- Skills: `ddd-platform`, `ddd-codegen`, `ddd-identity` under `.cursor/skills/`.
+- Do not regenerate adapters/services casually — sandbox + nested DI are hand-maintained after scaffold.

@@ -1,0 +1,155 @@
+openapi: 3.1.0
+info:
+  title: Evidence packs API
+  version: 0.1.0
+  description: |
+    Examiner evidence packs — lineage, approvals, metrics, incidents (BR-8).
+  license:
+    name: Proprietary
+  x-domain: evp
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: EvidencePacks
+    description: Examiner evidence packs
+paths:
+  /v1/evidence-packs:
+    get:
+      operationId: listEvidencePacks
+      tags: [EvidencePacks]
+      summary: List evidence packs
+      x-repository: EvidencePack
+      x-dynamodb:
+        entityType: "EVIDENCE_PACK"
+        pkPatternTemplate: "EVIDENCEPACK#${evidencePackId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: modelId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Packs
+          content:
+            application/json:
+              schema:
+                $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createModelEvidencePack
+      tags: [EvidencePacks]
+      summary: Generate an evidence pack for a model id
+      x-repository: EvidencePack
+      x-dynamodb:
+        entityType: "EVIDENCE_PACK"
+        pkPatternTemplate: "EVIDENCEPACK#${evidencePackId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/evidence-packs/{evidencePackId}:
+    get:
+      operationId: getEvidencePack
+      tags: [EvidencePacks]
+      summary: Get an evidence pack
+      x-repository: EvidencePack
+      x-dynamodb:
+        entityType: "EVIDENCE_PACK"
+        pkPatternTemplate: "EVIDENCEPACK#${evidencePackId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: evidencePackId
+          in: path
+          required: true
+          schema:
+            $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackId
+      responses:
+        '200':
+          description: Pack
+          content:
+            application/json:
+              schema:
+                $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/evidence-packs/{evidencePackId}/export:
+    post:
+      operationId: exportEvidencePack
+      tags: [EvidencePacks]
+      summary: Export pack (download URL + hash attestation)
+      x-repository: EvidencePack
+      parameters:
+        - name: evidencePackId
+          in: path
+          required: true
+          schema:
+            $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Exported
+          content:
+            application/json:
+              schema:
+                $ref: ./evidencepacks.schemas.yaml#/components/schemas/EvidencePackResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

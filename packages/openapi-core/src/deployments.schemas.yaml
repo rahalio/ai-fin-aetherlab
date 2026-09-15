@@ -1,0 +1,109 @@
+openapi: 3.1.0
+info:
+  title: Deployments schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    DeploymentId:
+      type: string
+      pattern: '^dep_[0-9A-HJKMNP-TV-Z]{26}$'
+    DeploymentStatus:
+      type: string
+      enum: [pending, approved, rejected, deployed, retired, rolled_back, blocked]
+    DeploymentApproval:
+      type: object
+      required:
+        - deploymentId
+        - modelId
+        - endpointName
+        - status
+        - builderId
+        - createdAt
+        - updatedAt
+      properties:
+        deploymentId:
+          $ref: '#/components/schemas/DeploymentId'
+        modelId:
+          type: string
+        endpointName:
+          type: string
+        status:
+          $ref: '#/components/schemas/DeploymentStatus'
+        builderId:
+          type: string
+        validatorId:
+          type: string
+        monitorIds:
+          type: array
+          items:
+            type: string
+        monitorsAttached:
+          type: boolean
+        highRiskException:
+          type: boolean
+        rollbackOfDeploymentId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DeploymentApprovalCreateRequest:
+      type: object
+      required: [modelId, endpointName, monitorIds]
+      properties:
+        modelId:
+          type: string
+        endpointName:
+          type: string
+        monitorIds:
+          type: array
+          items:
+            type: string
+        highRiskException:
+          type: boolean
+    DeploymentDecisionRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approved, rejected]
+        notes:
+          type: string
+    RollbackRequest:
+      type: object
+      required: [priorDeploymentId]
+      properties:
+        priorDeploymentId:
+          type: string
+        attestation:
+          type: string
+    DeploymentApprovalResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DeploymentApproval'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    DeploymentApprovalListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeploymentApproval'
+        nextCursor:
+          type: string
+    DeploymentApprovalListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DeploymentApprovalListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

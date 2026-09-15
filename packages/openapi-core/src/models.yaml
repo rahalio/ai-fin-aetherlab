@@ -1,0 +1,237 @@
+openapi: 3.1.0
+info:
+  title: Models API
+  version: 0.1.0
+  description: |
+    Model inventory including multi-cloud locus and dark-find registration (BR-7, BR-12).
+  license:
+    name: Proprietary
+  x-domain: mdl
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Models
+    description: Model inventory
+paths:
+  /v1/models:
+    get:
+      operationId: listModels
+      tags: [Models]
+      summary: List models
+      x-repository: Model
+      x-dynamodb:
+        entityType: "MODEL"
+        pkPatternTemplate: "MODEL#${modelId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            $ref: ./models.schemas.yaml#/components/schemas/ModelStatus
+        - name: riskClass
+          in: query
+          schema:
+            type: string
+        - name: cloudLocus
+          in: query
+          schema:
+            $ref: ./models.schemas.yaml#/components/schemas/CloudLocus
+        - name: monitorCoverage
+          in: query
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          description: Search by model id or name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Models
+          content:
+            application/json:
+              schema:
+                $ref: ./models.schemas.yaml#/components/schemas/ModelListResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createModel
+      tags: [Models]
+      summary: Register a model
+      x-repository: Model
+      x-dynamodb:
+        entityType: "MODEL"
+        pkPatternTemplate: "MODEL#${modelId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./models.schemas.yaml#/components/schemas/ModelCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./models.schemas.yaml#/components/schemas/ModelResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/models/{modelId}:
+    get:
+      operationId: getModel
+      tags: [Models]
+      summary: Get a model
+      x-repository: Model
+      x-dynamodb:
+        entityType: "MODEL"
+        pkPatternTemplate: "MODEL#${modelId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            $ref: ./models.schemas.yaml#/components/schemas/ModelId
+      responses:
+        '200':
+          description: Model
+          content:
+            application/json:
+              schema:
+                $ref: ./models.schemas.yaml#/components/schemas/ModelResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/models/dark-finds:
+    post:
+      operationId: forceRegisterDarkFind
+      tags: [Models]
+      summary: Force-register a model found outside the factory inventory
+      x-repository: Model
+      x-dynamodb:
+        entityType: "MODEL"
+        pkPatternTemplate: "MODEL#${modelId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./models.schemas.yaml#/components/schemas/ForceRegisterDarkFindRequest
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: ./models.schemas.yaml#/components/schemas/ModelResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/models/{modelId}/retire:
+    post:
+      operationId: retireModel
+      tags: [Models]
+      summary: Retire a model (first-class; orphans are a control fail)
+      x-repository: Model
+      x-dynamodb:
+        entityType: "MODEL"
+        pkPatternTemplate: "MODEL#${modelId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            $ref: ./models.schemas.yaml#/components/schemas/ModelId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./models.schemas.yaml#/components/schemas/RetireModelRequest
+      responses:
+        '200':
+          description: Retired
+          content:
+            application/json:
+              schema:
+                $ref: ./models.schemas.yaml#/components/schemas/ModelResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

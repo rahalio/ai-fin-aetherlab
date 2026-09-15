@@ -1,0 +1,139 @@
+:root {
+  --color-ink: #e7eef5;
+  --color-navy-950: #070b14;
+  --color-navy-900: #0f1724;
+  --color-navy-700: #243044;
+  --color-cyan-gate: #2ec4b6;
+  --color-amber-gap: #e9a820;
+  --color-scrap: #e4572e;
+  --color-graphite: #6b7280;
+  --color-brand: #5eead4;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --motion-gate: 180ms ease-out;
+  --motion-scrap: 220ms ease-in-out;
+  --motion-stage: 240ms ease-out;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--color-navy-950);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  background-image:
+    linear-gradient(180deg, rgba(15,23,36,0.4), transparent 28%),
+    repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(36,48,68,0.35) 24px),
+    repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(36,48,68,0.25) 24px);
+}
+
+a { color: var(--color-brand); text-decoration: none; }
+button, input, select, textarea {
+  font: inherit;
+}
+button {
+  background: var(--color-cyan-gate);
+  color: var(--color-navy-950);
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+button.ghost {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-navy-700);
+}
+button.danger { background: var(--color-scrap); color: white; }
+button.warn { background: var(--color-amber-gap); color: var(--color-navy-950); }
+
+input, select, textarea {
+  background: var(--color-navy-950);
+  color: var(--color-ink);
+  border: 1px solid var(--color-navy-700);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100%; }
+.nav {
+  background: var(--color-navy-900);
+  border-right: 1px solid var(--color-navy-700);
+  padding: 20px 14px;
+}
+.brand {
+  color: var(--color-brand);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.tagline { color: var(--color-graphite); font-size: 12px; margin-bottom: 24px; }
+.nav a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+}
+.nav a.active, .nav a:hover { background: #182233; color: var(--color-brand); }
+.main { padding: 28px 32px; }
+h1, h2 { font-weight: 600; margin: 0 0 12px; }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.grid { display: grid; gap: 12px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.card {
+  background: var(--color-navy-900);
+  border: 1px solid var(--color-navy-700);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--color-navy-700);
+  margin-right: 6px;
+}
+.badge.ok { color: var(--color-cyan-gate); border-color: var(--color-cyan-gate); }
+.badge.warn { color: var(--color-amber-gap); border-color: var(--color-amber-gap); }
+.badge.scrap { color: var(--color-scrap); border-color: var(--color-scrap); }
+.badge.retired { color: var(--color-graphite); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--color-navy-700);
+  font-size: 14px;
+}
+.login {
+  max-width: 420px;
+  margin: 12vh auto;
+  background: var(--color-navy-900);
+  padding: 28px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-navy-700);
+}
+.error { color: var(--color-scrap); font-size: 13px; }
+.banner.warn { background: rgba(233,168,32,0.12); border: 1px solid var(--color-amber-gap); padding: 10px; border-radius: var(--radius-sm); }
+.banner.scrap { background: rgba(228,87,46,0.12); border: 1px solid var(--color-scrap); padding: 10px; border-radius: var(--radius-sm); }
+.form { display: grid; gap: 10px; max-width: 560px; }
+.lineage { margin-bottom: var(--space-3); }
+.scrap-pulse { animation: scrap-pulse var(--motion-scrap) infinite alternate; }
+@keyframes scrap-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.7; }
+}

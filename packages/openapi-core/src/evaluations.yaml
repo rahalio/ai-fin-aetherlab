@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: Evaluations API
+  version: 0.1.0
+  description: |
+    Business-goal evaluations. AUC-only cannot pass production gates (BR-3).
+  license:
+    name: Proprietary
+  x-domain: evl
+servers:
+  - url: https://api.aetherlab.local
+    description: Local API
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Evaluations
+    description: Business-goal evaluations
+paths:
+  /v1/evaluations:
+    get:
+      operationId: listEvaluations
+      tags: [Evaluations]
+      summary: List evaluations
+      x-repository: Evaluation
+      x-dynamodb:
+        entityType: "EVALUATION"
+        pkPatternTemplate: "EVALUATION#${evaluationId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: modelId
+          in: query
+          schema:
+            type: string
+        - name: verdict
+          in: query
+          schema:
+            $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationVerdict
+      responses:
+        '200':
+          description: Evaluations
+          content:
+            application/json:
+              schema:
+                $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationReportListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createEvaluation
+      tags: [Evaluations]
+      summary: Record a business-goal evaluation
+      x-repository: Evaluation
+      x-dynamodb:
+        entityType: "EVALUATION"
+        pkPatternTemplate: "EVALUATION#${evaluationId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationReportCreateRequest
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationReportResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/evaluations/{evaluationId}:
+    get:
+      operationId: getEvaluation
+      tags: [Evaluations]
+      summary: Get an evaluation
+      x-repository: Evaluation
+      x-dynamodb:
+        entityType: "EVALUATION"
+        pkPatternTemplate: "EVALUATION#${evaluationId}"
+        skPatternTemplate: "METADATA"
+        pkPattern: entity
+        usePkQuery: false
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema:
+            $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationId
+      responses:
+        '200':
+          description: Evaluation
+          content:
+            application/json:
+              schema:
+                $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationReportResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+  /v1/evaluations/{evaluationId}/decision:
+    post:
+      operationId: decideEvaluation
+      tags: [Evaluations]
+      summary: Validator pass/fail for deploy eligibility
+      x-repository: Evaluation
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema:
+            $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationDecisionRequest
+      responses:
+        '200':
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: ./evaluations.schemas.yaml#/components/schemas/EvaluationReportResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: Models schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ModelId:
+      type: string
+      pattern: '^mdl_[0-9A-HJKMNP-TV-Z]{26}$'
+    ModelStatus:
+      type: string
+      enum: [draft, trained, evaluated, approved, deployed, retired, dark_find]
+    CloudLocus:
+      type: string
+      description: Training/inference location still reporting into this inventory (BR-12).
+      enum: [aws, azure, gcp, onprem, hybrid]
+    Model:
+      type: object
+      required: [modelId, projectId, name, status, riskClass, createdAt, updatedAt]
+      properties:
+        modelId:
+          $ref: '#/components/schemas/ModelId'
+        projectId:
+          type: string
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/ModelStatus'
+        riskClass:
+          type: string
+          enum: [low, credit, aml, trading, adverse_action]
+        cloudLocus:
+          $ref: '#/components/schemas/CloudLocus'
+        endpointName:
+          type: string
+        monitorCoverage:
+          type: boolean
+        orphanEndpoint:
+          type: boolean
+        baseModelZooId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        retiredAt:
+          type: string
+          format: date-time
+    ModelCreateRequest:
+      type: object
+      required: [projectId, name]
+      properties:
+        projectId:
+          type: string
+        name:
+          type: string
+        baseModelZooId:
+          type: string
+        cloudLocus:
+          $ref: '#/components/schemas/CloudLocus'
+    ForceRegisterDarkFindRequest:
+      type: object
+      required: [name, cloudLocus]
+      properties:
+        projectId:
+          type: string
+        name:
+          type: string
+        cloudLocus:
+          $ref: '#/components/schemas/CloudLocus'
+        endpointName:
+          type: string
+        notes:
+          type: string
+    RetireModelRequest:
+      type: object
+      properties:
+        attestation:
+          type: string
+        certifyNoOrphan:
+          type: boolean
+    ModelResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Model'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ModelListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+        nextCursor:
+          type: string
+    ModelListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ModelListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

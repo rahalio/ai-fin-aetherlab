@@ -1,0 +1,155 @@
+openapi: 3.1.0
+info:
+  title: Projects schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ProjectId:
+      type: string
+      pattern: '^prj_[0-9A-HJKMNP-TV-Z]{26}$'
+    RiskClass:
+      type: string
+      enum: [low, credit, aml, trading, adverse_action]
+    ProjectStatus:
+      type: string
+      enum: [draft, framed, active, archived]
+    ScaleQuotaStatus:
+      type: string
+      enum: [blocked, requested, granted, denied]
+    ProblemFrame:
+      type: object
+      required: [problemStatement, businessKpi, riskClass, permittedPurpose]
+      properties:
+        problemStatement:
+          type: string
+        businessKpi:
+          type: string
+        kpiThreshold:
+          type: number
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+        permittedPurpose:
+          type: string
+        submittedAt:
+          type: string
+          format: date-time
+        submittedBy:
+          type: string
+    Project:
+      type: object
+      required: [projectId, name, owner, riskClass, status, createdAt, updatedAt]
+      properties:
+        projectId:
+          $ref: '#/components/schemas/ProjectId'
+        name:
+          type: string
+        owner:
+          type: string
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        problemFrame:
+          $ref: '#/components/schemas/ProblemFrame'
+        scaleQuotaStatus:
+          $ref: '#/components/schemas/ScaleQuotaStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProjectCreateRequest:
+      type: object
+      required: [name, owner, riskClass]
+      properties:
+        name:
+          type: string
+        owner:
+          type: string
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+    SubmitProblemFrameRequest:
+      type: object
+      required: [problemStatement, businessKpi, riskClass, permittedPurpose]
+      properties:
+        problemStatement:
+          type: string
+        businessKpi:
+          type: string
+        kpiThreshold:
+          type: number
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+        permittedPurpose:
+          type: string
+    ScaleQuotaDecisionRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [granted, denied]
+        notes:
+          type: string
+    RiskClassGate:
+      type: object
+      required: [riskClass, requiredArtefacts, dualControl, monitorsRequired]
+      properties:
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+        requiredArtefacts:
+          type: array
+          items:
+            type: string
+        dualControl:
+          type: boolean
+        monitorsRequired:
+          type: boolean
+        extraChecklist:
+          type: array
+          items:
+            type: string
+    RiskClassGateMatrix:
+      type: object
+      required: [gates]
+      properties:
+        gates:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskClassGate'
+    ProjectResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Project'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ProjectListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        nextCursor:
+          type: string
+    ProjectListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProjectListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    RiskClassGateMatrixResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/RiskClassGateMatrix'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

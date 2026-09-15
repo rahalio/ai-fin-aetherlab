@@ -1,0 +1,896 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const createModel_Body = z
+  .object({
+    projectId: z.string(),
+    name: z.string(),
+    baseModelZooId: z.string().optional(),
+    cloudLocus: z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']).optional(),
+  })
+  .passthrough();
+const forceRegisterDarkFind_Body = z
+  .object({
+    projectId: z.string().optional(),
+    name: z.string(),
+    cloudLocus: z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']),
+    endpointName: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .passthrough();
+const retireModel_Body = z
+  .object({ attestation: z.string(), certifyNoOrphan: z.boolean() })
+  .partial()
+  .passthrough();
+const ModelStatus = z.enum([
+  'draft',
+  'trained',
+  'evaluated',
+  'approved',
+  'deployed',
+  'retired',
+  'dark_find',
+]);
+const CloudLocus = z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']);
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const ModelId = z.string();
+const Model = z
+  .object({
+    modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+    projectId: z.string(),
+    name: z.string(),
+    status: z.enum([
+      'draft',
+      'trained',
+      'evaluated',
+      'approved',
+      'deployed',
+      'retired',
+      'dark_find',
+    ]),
+    riskClass: z.enum(['low', 'credit', 'aml', 'trading', 'adverse_action']),
+    cloudLocus: z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']).optional(),
+    endpointName: z.string().optional(),
+    monitorCoverage: z.boolean().optional(),
+    orphanEndpoint: z.boolean().optional(),
+    baseModelZooId: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+    retiredAt: z.string().datetime({ offset: true }).optional(),
+  })
+  .passthrough();
+const ModelListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+          projectId: z.string(),
+          name: z.string(),
+          status: z.enum([
+            'draft',
+            'trained',
+            'evaluated',
+            'approved',
+            'deployed',
+            'retired',
+            'dark_find',
+          ]),
+          riskClass: z.enum([
+            'low',
+            'credit',
+            'aml',
+            'trading',
+            'adverse_action',
+          ]),
+          cloudLocus: z
+            .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+            .optional(),
+          endpointName: z.string().optional(),
+          monitorCoverage: z.boolean().optional(),
+          orphanEndpoint: z.boolean().optional(),
+          baseModelZooId: z.string().optional(),
+          createdAt: z.string().datetime({ offset: true }),
+          updatedAt: z.string().datetime({ offset: true }),
+          retiredAt: z.string().datetime({ offset: true }).optional(),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ModelListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+              projectId: z.string(),
+              name: z.string(),
+              status: z.enum([
+                'draft',
+                'trained',
+                'evaluated',
+                'approved',
+                'deployed',
+                'retired',
+                'dark_find',
+              ]),
+              riskClass: z.enum([
+                'low',
+                'credit',
+                'aml',
+                'trading',
+                'adverse_action',
+              ]),
+              cloudLocus: z
+                .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+                .optional(),
+              endpointName: z.string().optional(),
+              monitorCoverage: z.boolean().optional(),
+              orphanEndpoint: z.boolean().optional(),
+              baseModelZooId: z.string().optional(),
+              createdAt: z.string().datetime({ offset: true }),
+              updatedAt: z.string().datetime({ offset: true }),
+              retiredAt: z.string().datetime({ offset: true }).optional(),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const ModelCreateRequest = z
+  .object({
+    projectId: z.string(),
+    name: z.string(),
+    baseModelZooId: z.string().optional(),
+    cloudLocus: z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']).optional(),
+  })
+  .passthrough();
+const ModelResponse = z
+  .object({
+    data: z
+      .object({
+        modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+        projectId: z.string(),
+        name: z.string(),
+        status: z.enum([
+          'draft',
+          'trained',
+          'evaluated',
+          'approved',
+          'deployed',
+          'retired',
+          'dark_find',
+        ]),
+        riskClass: z.enum([
+          'low',
+          'credit',
+          'aml',
+          'trading',
+          'adverse_action',
+        ]),
+        cloudLocus: z
+          .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+          .optional(),
+        endpointName: z.string().optional(),
+        monitorCoverage: z.boolean().optional(),
+        orphanEndpoint: z.boolean().optional(),
+        baseModelZooId: z.string().optional(),
+        createdAt: z.string().datetime({ offset: true }),
+        updatedAt: z.string().datetime({ offset: true }),
+        retiredAt: z.string().datetime({ offset: true }).optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const ForceRegisterDarkFindRequest = z
+  .object({
+    projectId: z.string().optional(),
+    name: z.string(),
+    cloudLocus: z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']),
+    endpointName: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .passthrough();
+const RetireModelRequest = z
+  .object({ attestation: z.string(), certifyNoOrphan: z.boolean() })
+  .partial()
+  .passthrough();
+
+export const schemas: any = {
+  createModel_Body,
+  forceRegisterDarkFind_Body,
+  retireModel_Body,
+  ModelStatus,
+  CloudLocus,
+  Problem,
+  ModelId,
+  Model,
+  ModelListData,
+  ResponseMeta,
+  ModelListResponse,
+  ModelCreateRequest,
+  ModelResponse,
+  ForceRegisterDarkFindRequest,
+  RetireModelRequest,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v1/models',
+    alias: 'listModels',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(200).optional().default(50),
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z
+          .enum([
+            'draft',
+            'trained',
+            'evaluated',
+            'approved',
+            'deployed',
+            'retired',
+            'dark_find',
+          ])
+          .optional(),
+      },
+      {
+        name: 'riskClass',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'cloudLocus',
+        type: 'Query',
+        schema: z.enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid']).optional(),
+      },
+      {
+        name: 'monitorCoverage',
+        type: 'Query',
+        schema: z.boolean().optional(),
+      },
+      {
+        name: 'q',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  projectId: z.string(),
+                  name: z.string(),
+                  status: z.enum([
+                    'draft',
+                    'trained',
+                    'evaluated',
+                    'approved',
+                    'deployed',
+                    'retired',
+                    'dark_find',
+                  ]),
+                  riskClass: z.enum([
+                    'low',
+                    'credit',
+                    'aml',
+                    'trading',
+                    'adverse_action',
+                  ]),
+                  cloudLocus: z
+                    .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+                    .optional(),
+                  endpointName: z.string().optional(),
+                  monitorCoverage: z.boolean().optional(),
+                  orphanEndpoint: z.boolean().optional(),
+                  baseModelZooId: z.string().optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                  updatedAt: z.string().datetime({ offset: true }),
+                  retiredAt: z.string().datetime({ offset: true }).optional(),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/models',
+    alias: 'createModel',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: createModel_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+            projectId: z.string(),
+            name: z.string(),
+            status: z.enum([
+              'draft',
+              'trained',
+              'evaluated',
+              'approved',
+              'deployed',
+              'retired',
+              'dark_find',
+            ]),
+            riskClass: z.enum([
+              'low',
+              'credit',
+              'aml',
+              'trading',
+              'adverse_action',
+            ]),
+            cloudLocus: z
+              .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+              .optional(),
+            endpointName: z.string().optional(),
+            monitorCoverage: z.boolean().optional(),
+            orphanEndpoint: z.boolean().optional(),
+            baseModelZooId: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            retiredAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/models/:modelId',
+    alias: 'getModel',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'modelId',
+        type: 'Path',
+        schema: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+            projectId: z.string(),
+            name: z.string(),
+            status: z.enum([
+              'draft',
+              'trained',
+              'evaluated',
+              'approved',
+              'deployed',
+              'retired',
+              'dark_find',
+            ]),
+            riskClass: z.enum([
+              'low',
+              'credit',
+              'aml',
+              'trading',
+              'adverse_action',
+            ]),
+            cloudLocus: z
+              .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+              .optional(),
+            endpointName: z.string().optional(),
+            monitorCoverage: z.boolean().optional(),
+            orphanEndpoint: z.boolean().optional(),
+            baseModelZooId: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            retiredAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/models/:modelId/retire',
+    alias: 'retireModel',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: retireModel_Body,
+      },
+      {
+        name: 'modelId',
+        type: 'Path',
+        schema: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+            projectId: z.string(),
+            name: z.string(),
+            status: z.enum([
+              'draft',
+              'trained',
+              'evaluated',
+              'approved',
+              'deployed',
+              'retired',
+              'dark_find',
+            ]),
+            riskClass: z.enum([
+              'low',
+              'credit',
+              'aml',
+              'trading',
+              'adverse_action',
+            ]),
+            cloudLocus: z
+              .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+              .optional(),
+            endpointName: z.string().optional(),
+            monitorCoverage: z.boolean().optional(),
+            orphanEndpoint: z.boolean().optional(),
+            baseModelZooId: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            retiredAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/models/dark-finds',
+    alias: 'forceRegisterDarkFind',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: forceRegisterDarkFind_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            modelId: z.string().regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/),
+            projectId: z.string(),
+            name: z.string(),
+            status: z.enum([
+              'draft',
+              'trained',
+              'evaluated',
+              'approved',
+              'deployed',
+              'retired',
+              'dark_find',
+            ]),
+            riskClass: z.enum([
+              'low',
+              'credit',
+              'aml',
+              'trading',
+              'adverse_action',
+            ]),
+            cloudLocus: z
+              .enum(['aws', 'azure', 'gcp', 'onprem', 'hybrid'])
+              .optional(),
+            endpointName: z.string().optional(),
+            monitorCoverage: z.boolean().optional(),
+            orphanEndpoint: z.boolean().optional(),
+            baseModelZooId: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }),
+            retiredAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios(
+  'https://api.ddd-codegen-starter.local/v1',
+  endpoints
+);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

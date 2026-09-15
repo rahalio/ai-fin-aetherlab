@@ -1,0 +1,11 @@
+---
+description: Never commit or push the .codegen directory
+alwaysApply: true
+---
+
+# `.codegen` must never be committed or pushed
+
+- The local `.codegen@aetherlab/` tree (including `zero_codegen`) is a toolchain checkout, not product source.
+- Never `git add` `.codegen`, never commit it, never push it to GitHub.
+- `.gitignore` already lists `.codegen@aetherlab/` — do not remove that entry.
+- If a commit accidentally stages `.codegen`, unstage it before committing.
